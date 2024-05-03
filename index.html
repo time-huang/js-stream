@@ -1,0 +1,134 @@
+<html>
+<head>
+    <style>
+        .unit-test {
+            margin-top: 15px;
+        }
+
+        .unit-test-name {
+            color: #273030;
+            font-size: calc(14 / 16 * 1rem);
+            font-style: italic;
+            font-weight: 400;
+            -webkit-hyphens: none;
+            hyphens: none;
+            letter-spacing: .01em;
+            padding-left: .75rem;
+            padding-bottom: .275rem;
+            text-align: left;
+        }
+
+        .unit-test-code {
+            font-size: calc(14 / 16 * 1rem);
+            background: #f6f8fa;
+            border-radius: 4px;
+            box-shadow: inset 0 0 1.75px #eaedf0;
+            display: block;
+            overflow-x: auto;
+            padding: 1rem
+        }
+
+        .section {
+            margin-top: 20px;
+        }
+    </style>
+    <script src="stream.js"></script>
+
+</head>
+<body>
+<script src="jquery.min.js"></script>
+<script>
+    function assert(name, code, check) {
+        var testDiv = $('<div class="unit-test"><div class="unit-test-name"></div><code class="unit-test-code"></code></div>'),
+            nameDiv = testDiv.find('.unit-test-name'),
+            codeDiv = testDiv.find('.unit-test-code'),
+            r = eval(code), rs = JSON.stringify(r),
+            pCode = $('<p>' + code + '</p>'),
+            pResult = $('<p>result = ' + rs + '</p>')
+        nameDiv.text(name)
+        codeDiv.append(pCode)
+        codeDiv.append(pResult)
+        if (check && !check(r)) {
+            codeDiv.css({color: 'red'})
+        }
+        $('body').append(testDiv)
+    }
+
+    function assertMultiple(name, array) {
+        var testDiv = $('<div class="unit-test"><div class="unit-test-name"></div><code class="unit-test-code"></code></div>'),
+            nameDiv = testDiv.find('.unit-test-name'),
+            codeDiv = testDiv.find('.unit-test-code')
+        nameDiv.text(name)
+        for (var e of array) {
+            var code = e[0], check = e[1],
+                r = eval(code), rs = JSON.stringify(r),
+                pCode = $('<p>' + code + '</p>'),
+                pResult = $('<p>result = ' + rs + '</p>')
+            codeDiv.append(pCode)
+            codeDiv.append(pResult)
+            if (check && !check(r)) {
+                pCode.css({color: 'red'})
+                pResult.css({color: 'red'})
+            }
+        }
+        $('body').append(testDiv)
+    }
+
+    $('body').append('<div class="section">************ Three creation way **********************************</div>')
+
+    assert('Create Way 1 (recommend)', 'Stream.of([1,2,3]).joining("")', r => r === '123')
+    assert('Create Way 2', 'new Stream([1,2,3]).joining("")', r => r === '123')
+    assert('Create Way 3', 'new Stream().source([1,2,3]).joining("")', r => r === '123')
+
+    $('body').append('<div class="section">************ All middle operation in following **********************************</div>')
+
+    assert('filter', 'Stream.of([1,2,3,4,5]).filter(n => n % 2).joining("")', r => r === '135')
+    assert('map', 'Stream.of(["111", "111", "111"]).map(s => parseInt(s)).reduce(0, (acc, b) => acc + b)', r => r === 333)
+    assert('flatMap', 'Stream.of(["1,2,3,4,5"]).flatMap(s => s.split(",")).map(s => parseInt(s)).reduce(0, (acc, b) => acc + b)', r => r === 15)
+    assert('distinct', 'Stream.of([1,1,1,1,1]).filter(n => n % 2).distinct().count()', r => r === 1)
+    assertMultiple('sorted', [
+        ['Stream.of([5,4,2,3,1]).sorted().joining("")', r => r === '12345'],
+        ['Stream.of([5,4,2,3,1]).sorted((a,b) => a > b).joining("")', r => r === '12345'],
+        ['Stream.of([5,4,2,3,1]).sorted((a,b) => a < b).joining("")', r => r === '54321'],
+        ['Stream.of([5,4,2,3,1]).sorted((a,b) => a > b).sorted((a,b) => a < b).joining("")', r => r === '54321'],
+    ])
+    assert('peek', 'Stream.of([1,2,3,4,5]).peek(n => console.log("peek = " + n)).findLast()', r => r === 5)
+    assert('limit', 'Stream.of([1,2,3,4,5]).limit(1).joining("")', r => r === 1)
+    assert('skip', 'Stream.of([1,2,3,4,5]).skip(4).joining("")', r => r === 5)
+
+    $('body').append('<div class="section">************ All terminal operation in following **********************************</div>')
+
+    assert('forEach', 'Stream.of([1,2,3,4,5]).forEach(n => console.log("forEach = " + n))', r => r === undefined)
+    assert('toArray', 'Stream.of([1,2,3,4,5]).filter(n => n % 2).toArray()', r => r[0] === 1 && r[1] === 3 && r[2] === 5)
+    assertMultiple('toMap', [
+        ['Stream.of([{name:"tom",age:18},{name:"jack",age:18},{name:"tom",age:10}]).toMap(o => o.name, o => o)', r => r['tom']['age'] === 10],
+        ['Stream.of([{name:"tom",age:18},{name:"jack",age:18},{name:"tom",age:10}]).toMap(o => o.name, o => o, (a, b) => b)', r => r['tom']['age'] === 10],
+        ['Stream.of([{name:"tom",age:18},{name:"jack",age:18},{name:"tom",age:10}]).toMap(o => o.name, o => o, (a, b) => a)', r => r['tom']['age'] === 18]
+    ])
+    assert('reduce', 'Stream.of([1,2,3,4,5]).map(n => n * 10).reduce(0, (acc, b) => acc + b)', r => r === 150)
+    assert('min', 'Stream.of([1,2,3,4,5]).filter(n => n !== 1).min((a, b) => a > b)', r => r === 2)
+    assert('max', 'Stream.of([1,2,3,4,5]).filter(n => n !== 5).max((a, b) => a > b)', r => r === 4)
+    assertMultiple('count', [
+        ['Stream.of([1,2,3,4,5,1,3]).distinct().count()', r => r === 5],
+        ['Stream.of([{name:"tom",age:18},{name:"jack",age:18},{name:"tom",age:10}]).distinct(o => o.name).count()', r => r === 2]
+    ])
+    assertMultiple('anyMatch', [
+        ['Stream.of([1,2,3,4,5]).anyMatch(n => n > 3)', r => r],
+        ['Stream.of([1,2,3,4,5]).anyMatch(n => n > 5)', r => !r],
+    ])
+    assertMultiple('allMatch', [
+        ['Stream.of([1,2,3,4,5]).allMatch(n => n > 3)', r => !r],
+        ['Stream.of([1,2,3,4,5]).allMatch(n => n > 0)', r => r],
+    ])
+    assertMultiple('noneMatch', [
+        ['Stream.of([1,2,3,4,5]).noneMatch(n => n > 5)', r => r],
+        ['Stream.of([1,2,3,4,5]).noneMatch(n => n > 3)', r => !r],
+    ])
+    assert('findFirst', 'Stream.of([1,2,3,4,5]).skip(1).findFirst()', r => r === 2)
+    assert('findLast', 'Stream.of([1,2,3,4,5]).findLast()', r => r === 5)
+    assert('joining', 'Stream.of([1,2,3,4,5]).joining("-")', r => r === '1-2-3-4-5')
+
+
+</script>
+</body>
+</html>
