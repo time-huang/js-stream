@@ -1,5 +1,5 @@
 # stream.js  
-Jump to [chinese](README_ch.md) document
+Jump to [chinese](README_CN.md) document
 
 stream.js is a Javascript file written with reference to the Java Stream API.  
 Let JavaScript user use array by java stream way.  
