@@ -21,6 +21,7 @@ stream.js是一个参考Java Stream API编写的Javascript文件。
 |          | findFirst |
 |          | findLast  |
 |          |  joining  |
+|          | groupingBy |
 
 
 ## Usage
