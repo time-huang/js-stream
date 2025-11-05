@@ -95,6 +95,12 @@
     assert('peek', 'Stream.of([1,2,3,4,5]).peek(n => console.log("peek = " + n)).findLast()', r => r === 5)
     assert('limit', 'Stream.of([1,2,3,4,5]).limit(1).joining("")', r => r === 1)
     assert('skip', 'Stream.of([1,2,3,4,5]).skip(4).joining("")', r => r === 5)
+    assert('takeWhile', 'Stream.of([1,2,3,4,5]).takeWhile(n => n < 3).joining("")', r => r === '12')
+    assert('takeWhile - first element fails', 'Stream.of([1,2,3,4,5]).takeWhile(n => n > 3).joining("")', r => r === '')
+    assert('takeWhile - all elements pass', 'Stream.of([1,2,3,4,5]).takeWhile(n => n < 10).joining("")', r => r === '12345')
+    assert('dropWhile', 'Stream.of([1,2,3,4,5]).dropWhile(n => n < 3).joining("")', r => r === '345')
+    assert('dropWhile - first element fails', 'Stream.of([1,2,3,4,5]).dropWhile(n => n > 3).joining("")', r => r === '12345')
+    assert('dropWhile - all elements pass', 'Stream.of([1,2,3,4,5]).dropWhile(n => n < 10).joining("")', r => r === '')
 
     $('body').append('<div class="section">************ All terminal operation in following **********************************</div>')
 
@@ -134,6 +140,12 @@
     assertMultiple('groupingBy with downstream collector', [
         ['Stream.of([1,2,3,4,5]).groupingBy(n => n % 2 === 0 ? "even" : "odd", group => group.length)', r => JSON.stringify(r) === JSON.stringify({"odd":3,"even":2})],
         ['Stream.of([{name:"tom",age:18},{name:"jack",age:18},{name:"tom",age:10}]).groupingBy(o => o.name, group => group.reduce((sum, o) => sum + o.age, 0))', r => JSON.stringify(r) === JSON.stringify({"tom":28,"jack":18})]
+    ])
+    
+    assertMultiple('teeing', [
+        ['Stream.of([1,2,3,4,5]).teeing(s => s.reduce(0, (a,b) => a+b), s => s.count(), (sum, count) => sum / count)', r => r === 3],
+        ['Stream.of([1,2,3,4,5]).teeing(s => s.min((a,b) => a > b), s => s.max((a,b) => a > b), (min, max) => [min, max])', r => JSON.stringify(r) === JSON.stringify([1,5])],
+        ['Stream.of([1,2,3,4,5]).teeing(s => s.filter(n => n % 2).toArray(), s => s.filter(n => n % 2 === 0).toArray(), (odds, evens) => ({odds: odds, evens: evens}))', r => JSON.stringify(r) === JSON.stringify({odds: [1,3,5], evens: [2,4]})]
     ])
 
 

@@ -16,12 +16,13 @@ stream.js是一个参考Java Stream API编写的Javascript文件。
 |   peek   |    max    |
 |  limit   |   count   |
 |   skip   | anyMatch  |
-|          | allMatch  |
-|          | noneMatch |
+| takeWhile | allMatch  |
+| dropWhile | noneMatch |
 |          | findFirst |
 |          | findLast  |
 |          |  joining  |
 |          | groupingBy |
+|          |   teeing   |
 
 
 ## Usage

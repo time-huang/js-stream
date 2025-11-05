@@ -172,6 +172,38 @@ class Stream {
         return downstream
     }
 
+    takeWhile(predicate) {
+        var downstream = this.#createDownstream('takeWhile')
+        downstream.taking = true
+        downstream.wrap = function (downstream) {
+            this.accept = (e) => {
+                if (this.taking && predicate(e)) {
+                    downstream.accept(e)
+                } else {
+                    this.taking = false
+                }
+            }
+        }
+        downstream.#buildShortCircuitRequestChain(() => !downstream.taking)
+        return downstream
+    }
+
+    dropWhile(predicate) {
+        var downstream = this.#createDownstream('dropWhile')
+        downstream.dropping = true
+        downstream.wrap = function (downstream) {
+            this.accept = (e) => {
+                if (this.dropping && predicate(e)) {
+                    // continue dropping
+                } else {
+                    this.dropping = false
+                    downstream.accept(e)
+                }
+            }
+        }
+        return downstream
+    }
+
     // ************ all terminal operation in following **********************************
 
     forEach(action) {
@@ -341,6 +373,13 @@ class Stream {
         return obj
     }
 
+    teeing(terminal1Fn, terminal2Fn, merger) {
+        // Process the stream through both terminal operations and combine results
+        const result1 = terminal1Fn(this)
+        const result2 = terminal2Fn(this)
+        return merger(result1, result2)
+    }
+
     #createDownstream(name) {
         var downstream = new Stream()
         downstream.name = name
@@ -404,3 +443,4 @@ class Stream {
     }
 
 }
+
