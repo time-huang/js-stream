@@ -17,12 +17,13 @@ All stream operation has tow style：intermediate operation and terminal operati
 |          peek          |        max         |
 |         limit          |       count        |
 |          skip          |      anyMatch      |
-|                        |      allMatch      |
-|                        |     noneMatch      |
+|        takeWhile       |      allMatch      |
+|        dropWhile       |     noneMatch      |
 |                        |     findFirst      |
 |                        |      findLast      |
 |                        |      joining       |
 |                        |     groupingBy     |
+|                        |       teeing       |
 
 
 ## Usage
