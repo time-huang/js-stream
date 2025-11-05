@@ -22,6 +22,7 @@ All stream operation has tow style：intermediate operation and terminal operati
 |                        |     findFirst      |
 |                        |      findLast      |
 |                        |      joining       |
+|                        |     groupingBy     |
 
 
 ## Usage

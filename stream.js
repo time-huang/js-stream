@@ -313,6 +313,34 @@ class Stream {
         return state
     }
 
+    groupingBy(classifier, downstream) {
+        var downstreamStream = this.#createDownstream('groupingBy'), state = new Map()
+        downstreamStream.accept = (e) => {
+            var key = classifier(e)
+            if (!state.has(key)) {
+                state.set(key, [])
+            }
+            state.get(key).push(e)
+        }
+        downstreamStream.#evaluate()
+        
+        // If there's a downstream collector, apply it to each group
+        if (downstream) {
+            var obj = {}
+            for (var [key, group] of state) {
+                obj[key] = downstream(group)
+            }
+            return obj
+        }
+        
+        // Convert Map to plain object for easier use in JavaScript
+        var obj = {}
+        for (var [key, value] of state) {
+            obj[key] = value
+        }
+        return obj
+    }
+
     #createDownstream(name) {
         var downstream = new Stream()
         downstream.name = name
